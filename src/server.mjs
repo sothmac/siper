@@ -26,6 +26,20 @@ function sendJson(response, status, value) {
 }
 
 const server = http.createServer(async (request, response) => {
+  const forwardedProtocol = String(request.headers["x-forwarded-proto"] || "")
+    .split(",", 1)[0]
+    .trim()
+    .toLowerCase();
+
+  if (forwardedProtocol === "http") {
+    const host = request.headers.host;
+    if (host) {
+      response.writeHead(308, { location: `https://${host}${request.url || "/"}` });
+      response.end();
+      return;
+    }
+  }
+
   if (request.method === "OPTIONS") {
     response.writeHead(204, {
       "access-control-allow-origin": "*",
